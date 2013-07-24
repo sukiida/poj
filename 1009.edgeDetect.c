@@ -2,15 +2,16 @@
 
 static long image[1000][2] = {0};
 static int pairs = 0;
+static long width = 0;
 static long length = 0;
-int part_edge(long n, long width, int j);
+int part_edge(long n, long wpidth, int j);
 int pix(long n);
+long skip_block(long i);
 
 int main()
 {
 
     while (1) {
-	long width = 0;
 	scanf("%ld", &width);
 	if (0 == width) {
 	    break;
@@ -36,6 +37,8 @@ int main()
 	int last_edge = 0;
 	long edge_len = 0;
 	for (long i = 1; i <= length; i++) {
+	    long s = skip_block(i);
+	    i += s;
 	    edge = 0;
 	    for (int j = 0; j < 9; j++) {
 		edge = edge > part_edge(i, width, j) ? edge : part_edge(i, width, j);
@@ -50,6 +53,7 @@ int main()
 		edge_len = 1;
 		continue;
 	    } else {
+		edge_len += s;
 		edge_len++;
 	    }
 	}
@@ -100,3 +104,26 @@ int pix(long n)
     }
     return image[k - 1][0];
 }
+
+long skip_block(long i)
+{
+    long ii = i;
+    long pos = 0;
+    long previous_pos = 0;
+    int index = 0;
+    while (pos < i && index < pairs) {
+	previous_pos = pos;
+	pos += image[index++][1];
+    }
+
+    /* if (index == pairs) { */
+    /* 	goto exit; */
+    /* } */
+
+    if (((i - previous_pos) > 2 * width) && ((pos - i) > 2 * width)) {
+	i = pos - 2 * width;
+    }
+exit:
+    return i - ii;
+}
+
