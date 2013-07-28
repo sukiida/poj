@@ -7,6 +7,11 @@ static long length = 0;
 int part_edge(long n, long wpidth, int j);
 int pix(long n);
 long skip_block(long i);
+void one_line();
+int abs(int a)
+{
+    return a > 0 ? a : -a;
+}
 
 int main()
 {
@@ -17,7 +22,8 @@ int main()
 	    break;
 	}
 
-
+	length = 0;
+	pairs = 0;
 	int a;
 	long b;
         //read in RLE image
@@ -33,6 +39,12 @@ int main()
 	}
 
 	printf("%ld\n", width);
+	if (length == width)
+	{
+	    one_line();
+	    continue;
+	}
+
 	int edge = 0;
 	int last_edge = 0;
 	long edge_len = 0;
@@ -127,3 +139,105 @@ exit:
     return i - ii;
 }
 
+#define MAX_COUNT 3000
+void one_line()
+{
+    int count = 0;
+    long edge[MAX_COUNT][2] = {0};
+    int index = 0;
+    while (index < pairs) {
+	if (index == 0) {
+	    if (image[index][1] == 1) {
+		if (index + 1 < pairs) {
+		    edge[count][0] = abs(image[index][0] - image[index + 1][0]);
+		} else {
+		    edge[count][0] = 0;
+		}
+		edge[count][1] = 1;
+		count++;
+	    } else {
+		if (index + 1 < pairs) {
+		    edge[count][0] = 0;
+		    edge[count][1] = image[index][1] - 1;
+		    count++;
+ 		    edge[count][0] = abs(image[index][0] - image[index + 1][0]);
+		    edge[count][0] = 1;
+		    count++;
+		} else {
+		    edge[count][0] = 0;
+		    edge[count][1] = image[index][1];
+		    count++;
+		}
+	    }
+	    index++;
+	    continue;
+	} else if (index == pairs - 1) {
+	    if (image[index][1] == 1) {
+		if (index - 1 < 0) {
+		    edge[count][0] = 0;
+		} else {
+		    edge[count][0] = abs(image[index][0] - image[index - 1][0]);
+		}
+		edge[count][1] = 1;
+		count++;
+	    } else {
+		if (index - 1 < 0) {
+                    // never enters. same as index == 0 && pairs == 1
+		    ;
+		} else {
+ 		    edge[count][0] = abs(image[index][0] - image[index - 1][0]);
+		    edge[count][1] = 1;
+		    count++;
+		    edge[count][0] = 0;
+		    edge[count][1] = image[index][1] - 1;
+		    count++;
+		}
+	    }
+	    index++;
+	    continue;
+	} else {  // normal situation
+	    if (image[index][1] == 1) {
+		int edge1 = abs(image[index][0] - image[index - 1][0]);
+		int edge2 = abs(image[index][0] - image[index + 1][0]);
+		edge[count][0] = edge1 > edge2 ? edge1 : edge2;
+		edge[count][1] = 1;
+		count++;
+	    } else if (image[index][1] == 2) {
+		edge[count][0] = abs(image[index][0] - image[index - 1][0]);
+		edge[count][1] = 1;
+		count++;
+		edge[count][0] = abs(image[index][0] - image[index + 1][0]);
+		edge[count][1] = 1;
+		count++;
+	    } else {
+		edge[count][0] = abs(image[index][0] - image[index - 1][0]);
+		edge[count][1] = 1;
+		count++;
+		edge[count][0] = 0;
+		edge[count][1] = image[index][1] - 2;
+		count++;
+		edge[count][0] = abs(image[index][0] - image[index + 1][0]);
+		edge[count][1] = 1;
+		count++;
+	    }
+	    index++;
+	    continue;
+	}
+    }
+
+    int tmp = 1;
+    int tmp_edge = edge[0][0];
+    long tmp_length = edge[0][1];
+    while (tmp < count) {
+	if (tmp_edge != edge[tmp][0]) {
+	    printf("%d %ld\n", tmp_edge, tmp_length);
+	    tmp_edge = edge[tmp][0];
+	    tmp_length = edge[tmp][1];
+	} else {
+	    tmp_length += edge[tmp][1];
+	}
+	tmp++;
+    }
+    printf("%d %ld\n", tmp_edge, tmp_length);
+    printf("0 0\n");
+}
